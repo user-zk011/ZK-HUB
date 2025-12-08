@@ -1,5 +1,5 @@
 --============================================================
--- ZK HUB - DiamondTech UI (Painel organizado + ESP Real)
+-- ZK HUB - DiamondTech UI Atualizado
 --============================================================
 
 local Players = game:GetService("Players")
@@ -10,7 +10,7 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- REMOVE ANTIGO
+-- REMOVE GUI ANTIGO
 local old = playerGui:FindFirstChild("ZKHUB")
 if old then old:Destroy() end
 
@@ -20,37 +20,45 @@ gui.IgnoreGuiInset = true
 gui.Parent = playerGui
 
 ----------------------------------------------------------
--- BOTÃO ABRIR (draggable)
+-- BOTÃO ABRIR (draggable) COM DEGRADE
 ----------------------------------------------------------
 local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0, 80, 0, 80)
+openBtn.Size = UDim2.new(0, 100, 0, 100)
 openBtn.Position = UDim2.new(0.12, 0, 0.40, 0)
-openBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+openBtn.BackgroundColor3 = Color3.fromRGB(10,10,10)
 openBtn.Text = "ZK"
-openBtn.TextColor3 = Color3.fromRGB(0,0,0)
-openBtn.TextSize = 40
+openBtn.TextColor3 = Color3.fromRGB(255,255,255)
+openBtn.TextSize = 50
 openBtn.Font = Enum.Font.GothamBlack
 openBtn.Parent = gui
-Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1,0)
+local corner = Instance.new("UICorner", openBtn)
+corner.CornerRadius = UDim.new(1,0)
 
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(200,255,255)
-stroke.Thickness = 3
+stroke.Color = Color3.fromRGB(255,255,255)
+stroke.Thickness = 2
 stroke.Parent = openBtn
 
+local gradient = Instance.new("UIGradient", openBtn)
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,180,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,50,150))
+}
+gradient.Rotation = 45
+
 ----------------------------------------------------------
--- PAINEL (draggable)
+-- PAINEL PRINCIPAL
 ----------------------------------------------------------
 local panel = Instance.new("Frame")
 panel.Size = UDim2.new(0, 550, 0, 380)
-panel.BackgroundColor3 = Color3.fromRGB(10,20,30)
+panel.BackgroundColor3 = Color3.fromRGB(5,10,20) -- Preto azulado escuro
 panel.AnchorPoint = Vector2.new(0.5,0.5)
-panel.Position = UDim2.new(0.5,0, -1,0)
+panel.Position = UDim2.new(0.5,0,-1,0)
 panel.Parent = gui
 Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
 
 local ps = Instance.new("UIStroke")
-ps.Color = Color3.fromRGB(0,255,255)
+ps.Color = Color3.fromRGB(0,150,255)
 ps.Thickness = 3
 ps.Parent = panel
 
@@ -61,7 +69,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -20, 0, 40)
 title.Position = UDim2.new(0,10,0,10)
 title.BackgroundTransparency = 1
-title.Text = "ZK HUB"
+title.Text = "ZK HUB - ROUBE UM BRAINROT"
 title.TextColor3 = Color3.fromRGB(200,255,255)
 title.TextSize = 26
 title.Font = Enum.Font.GothamBold
@@ -74,7 +82,8 @@ closeBtn.Position = UDim2.new(1,-50,0,10)
 closeBtn.Text = "X"
 closeBtn.Font = Enum.Font.GothamBlack
 closeBtn.TextSize = 24
-closeBtn.BackgroundColor3 = Color3.fromRGB(0,255,255)
+closeBtn.BackgroundColor3 = Color3.fromRGB(0,150,255)
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
 closeBtn.Parent = panel
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 
@@ -84,7 +93,7 @@ Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 local menu = Instance.new("Frame")
 menu.Size = UDim2.new(0, 150, 1, -60)
 menu.Position = UDim2.new(0,10,0,60)
-menu.BackgroundColor3 = Color3.fromRGB(14,26,40)
+menu.BackgroundColor3 = Color3.fromRGB(0,50,80) -- Azul mais vivo
 menu.Parent = panel
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0,10)
 
@@ -107,10 +116,10 @@ local currentCategory = nil
 function newCategory(name)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1,-10,0,40)
-    btn.BackgroundColor3 = Color3.fromRGB(0,255,255)
+    btn.BackgroundColor3 = Color3.fromRGB(0,150,255)
     btn.BackgroundTransparency = 0.8
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(0,0,0)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.TextSize = 16
     btn.Font = Enum.Font.GothamBlack
     btn.Parent = menu
@@ -140,11 +149,10 @@ newCategory("Mundo")
 newCategory("Extras")
 
 ----------------------------------------------------------
--- ESP PLAYER (estilo moderno)
+-- ESP PLAYER
 ----------------------------------------------------------
 local espEnabled = false
 
--- TEXTO
 local espLabel = Instance.new("TextLabel")
 espLabel.Size = UDim2.new(0,200,0,40)
 espLabel.Position = UDim2.new(0,20,0,20)
@@ -155,11 +163,10 @@ espLabel.TextSize = 20
 espLabel.Font = Enum.Font.GothamBold
 espLabel.Parent = cat1
 
--- SWITCH (botão ON/OFF)
 local espSwitch = Instance.new("TextButton")
 espSwitch.Size = UDim2.new(0,80,0,40)
 espSwitch.Position = UDim2.new(0,230,0,20)
-espSwitch.BackgroundColor3 = Color3.fromRGB(40,70,90)
+espSwitch.BackgroundColor3 = Color3.fromRGB(0,50,80)
 espSwitch.Text = "OFF"
 espSwitch.TextColor3 = Color3.fromRGB(255,255,255)
 espSwitch.TextSize = 18
@@ -167,39 +174,21 @@ espSwitch.Font = Enum.Font.GothamBlack
 espSwitch.Parent = cat1
 Instance.new("UICorner", espSwitch).CornerRadius = UDim.new(1,0)
 
-----------------------------------------------------------
--- FUNÇÃO: APLICAR VISUAL AZUL NA SKIN DO PLAYER
-----------------------------------------------------------
 function applyESP(character)
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             part.Material = Enum.Material.ForceField
-            part.Color = Color3.fromRGB(0,255,255)
+            part.Color = Color3.fromRGB(0,180,255)
             part.Transparency = 0.6
         end
     end
 end
 
-function removeESP(character)
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Material = Enum.Material.Plastic
-            part.Transparency = 0
-        end
-    end
-end
-
-----------------------------------------------------------
--- ATUALIZAR ESP EM TODOS OS PLAYERS
-----------------------------------------------------------
 RunService.RenderStepped:Connect(function()
     if not espEnabled then return end
-
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then
-            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                applyESP(p.Character)
-            end
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            applyESP(p.Character)
         end
     end
 end)
@@ -207,7 +196,7 @@ end)
 espSwitch.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     espSwitch.Text = espEnabled and "ON" or "OFF"
-    espSwitch.BackgroundColor3 = espEnabled and Color3.fromRGB(0,255,255) or Color3.fromRGB(40,70,90)
+    espSwitch.BackgroundColor3 = espEnabled and Color3.fromRGB(0,180,255) or Color3.fromRGB(0,50,80)
 end)
 
 ----------------------------------------------------------
@@ -227,7 +216,7 @@ openBtn.MouseButton1Click:Connect(toggle)
 closeBtn.MouseButton1Click:Connect(toggle)
 
 ----------------------------------------------------------
--- ABRIR APENAS COM OS CONTROLS
+-- ABRIR APENAS COM CONTROLS
 ----------------------------------------------------------
 UIS.InputBegan:Connect(function(input,gpe)
     if gpe then return end
@@ -237,7 +226,7 @@ UIS.InputBegan:Connect(function(input,gpe)
 end)
 
 ----------------------------------------------------------
--- BOTÃO ABRIR: DRAGGABLE
+-- DRAGGABLE BOTÃO
 ----------------------------------------------------------
 local dragging = false
 local dragStart, startPos
@@ -249,13 +238,11 @@ openBtn.InputBegan:Connect(function(input)
         startPos = openBtn.Position
     end
 end)
-
 openBtn.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
     end
 end)
-
 UIS.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
@@ -267,7 +254,7 @@ UIS.InputChanged:Connect(function(input)
 end)
 
 ----------------------------------------------------------
--- PAINEL DRAGGABLE
+-- DRAGGABLE PAINEL
 ----------------------------------------------------------
 local dragging2 = false
 local dragStart2, startPos2
@@ -279,13 +266,11 @@ panel.InputBegan:Connect(function(input)
         startPos2 = panel.Position
     end
 end)
-
 panel.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging2 = false
     end
 end)
-
 UIS.InputChanged:Connect(function(input)
     if dragging2 and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart2
