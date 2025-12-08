@@ -1,453 +1,400 @@
--- ZK HUB - Versão corrigida e estilizada (LocalScript)
--- Cole em StarterGui ou StarterPlayerScripts
-
-pcall(function()
-	if getgenv then
-		if getgenv().ZK_HUB_LOADED then return end
-		getgenv().ZK_HUB_LOADED = true
-	end
-end)
-
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
-if not player then return end
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Tema
-local THEME = Color3.fromRGB(64, 224, 208)
-local PANEL_BG = Color3.fromRGB(8, 14, 20)
-local TEXT_COLOR = Color3.fromRGB(230, 245, 244)
+-- Limpa antigo
+local oldGui = playerGui:FindFirstChild("ZKHUB")
+if oldGui then oldGui:Destroy() end
 
--- Tamanhos
-local isTouch = UserInputService.TouchEnabled
-local OPEN_SIZE = isTouch and UDim2.new(0, 70, 0, 70) or UDim2.new(0, 110, 0, 110)
-local PANEL_SIZE = isTouch and UDim2.new(0, 540, 0, 360) or UDim2.new(0, 1050, 0, 700)
-local PANEL_MIN_SIZE = Vector2.new(400, 260)
-local PANEL_MAX_SIZE = Vector2.new(1600, 1000)
-local PANEL_SHOW_POS = UDim2.new(0.5, -PANEL_SIZE.X.Offset/2, 0.5, -PANEL_SIZE.Y.Offset/2)
-local PANEL_HIDDEN_POS = UDim2.new(0.5, -PANEL_SIZE.X.Offset/2, -1.2, 0)
-local TWEEN = TweenInfo.new(0.30, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local gui = Instance.new("ScreenGui")
+gui.Name = "ZKHUB"
+gui.IgnoreGuiInset = true
+gui.Parent = playerGui
 
--- Cleanup antigo
-local existing = playerGui:FindFirstChild("ZKHubGui")
-if existing then existing:Destroy() end
+-- CORES
+local COLOR_BG = Color3.fromRGB(13,25,37) -- fundo painel
+local COLOR_BORDER = Color3.fromRGB(0,184,255) -- azul neon
+local COLOR_TEXT = Color3.fromRGB(168,219,254) -- azul claro texto
+local COLOR_TOGGLE_BG = Color3.fromRGB(34,44,54) -- fundo toggle OFF
+local COLOR_TOGGLE_ON = Color3.fromRGB(0,184,255) -- toggle ON
 
--- ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ZKHubGui"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.DisplayOrder = 9999
-ScreenGui.Parent = playerGui
-
--- Ícone ZK
-local Icon = Instance.new("TextButton")
-Icon.Name = "ZKIcon"
-Icon.Size = OPEN_SIZE
-Icon.Position = UDim2.new(0.03, 0, 0.38, 0)
-Icon.AnchorPoint = Vector2.new(0,0)
-Icon.BackgroundColor3 = PANEL_BG
-Icon.BorderSizePixel = 0
-Icon.AutoButtonColor = true
-Icon.Text = "ZK"
-Icon.Font = Enum.Font.GothamBlack
-Icon.TextSize = isTouch and 22 or 36
-Icon.TextScaled = false
-Icon.ZIndex = 100
-Icon.Parent = ScreenGui
-
-local iconCorner = Instance.new("UICorner", Icon)
-iconCorner.CornerRadius = UDim.new(0, 14)
-local iconStroke = Instance.new("UIStroke", Icon)
-iconStroke.Color = THEME
-iconStroke.Thickness = isTouch and 3 or 4
-
--- Degradê no ícone
-local iconGradient = Instance.new("UIGradient", Icon)
-iconGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,255)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,255,255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(0,255,0))
-}
-iconGradient.Rotation = 45
-
--- Arrastar ícone
-do
-	local dragging, dragInput, dragStart, startPos
-	Icon.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-			dragStart = input.Position
-			startPos = Icon.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-	Icon.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
-			dragInput = input
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input == dragInput then
-			local delta = input.Position - dragStart
-			Icon.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
+-- FUNÇÃO PARA CRIAR UICORNER FACIL
+local function createUICorner(parent, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius or 10)
+    c.Parent = parent
+    return c
 end
 
--- Painel principal
-local Panel = Instance.new("Frame")
-Panel.Name = "ZKPanel"
-Panel.Size = PANEL_SIZE
-Panel.Position = PANEL_HIDDEN_POS
-Panel.AnchorPoint = Vector2.new(0,0)
-Panel.BackgroundColor3 = PANEL_BG
-Panel.BorderSizePixel = 0
-Panel.Visible = false
-Panel.ZIndex = 200
-Panel.Parent = ScreenGui
+-- FUNÇÃO PARA CRIAR UIStroke
+local function createUIStroke(parent, color, thickness)
+    local s = Instance.new("UIStroke")
+    s.Color = color
+    s.Thickness = thickness or 2
+    s.Parent = parent
+    return s
+end
 
-local panelCorner = Instance.new("UICorner", Panel)
-panelCorner.CornerRadius = UDim.new(0, 18)
+-- #########################
+-- BOTÃO ABRIR - MODERNO
+-- #########################
+local openBtn = Instance.new("Frame")
+openBtn.Size = UDim2.new(0, 70, 0, 70)
+openBtn.Position = UDim2.new(0.15, 0, 0.40, 0) -- mais pra direita
+openBtn.BackgroundColor3 = COLOR_BG
+openBtn.Parent = gui
+createUICorner(openBtn, 35)
+createUIStroke(openBtn, COLOR_BORDER, 2)
 
-local panelStroke = Instance.new("UIStroke", Panel)
-panelStroke.Color = THEME
-panelStroke.Thickness = isTouch and 3 or 5
+local openText = Instance.new("TextLabel")
+openText.Text = "ZK"
+openText.Font = Enum.Font.GothamBold
+openText.TextColor3 = COLOR_TEXT
+openText.TextSize = 30
+openText.BackgroundTransparency = 1
+openText.Size = UDim2.new(1,0,1,0)
+openText.Parent = openBtn
+openText.AnchorPoint = Vector2.new(0.5, 0.5)
+openText.Position = UDim2.new(0.5, 0, 0.5, 0)
 
-local panelGradient = Instance.new("UIGradient", Panel)
-panelGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(14,20,28)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(8,14,20))
-}
-panelGradient.Rotation = 90
+-- Sombras sutis no botão
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(1,12,1,12)
+shadow.Position = UDim2.new(0,-6,0,-6)
+shadow.BackgroundColor3 = Color3.new(0,0,0)
+shadow.BackgroundTransparency = 0.9
+shadow.ZIndex = openBtn.ZIndex - 1
+shadow.Parent = openBtn
+createUICorner(shadow, 40)
 
--- Título do painel com degradê
-local Title = Instance.new("TextLabel", Panel)
-Title.Name = "Title"
-Title.Size = UDim2.new(1, -32, 0, 56)
-Title.Position = UDim2.new(0, 16, 0, 12)
-Title.BackgroundTransparency = 1
-Title.Text = "ZK HUB - ROUBE UM BRAINROT"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = isTouch and 18 or 24
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.ZIndex = Panel.ZIndex + 2
+-- BOTÃO ABRIR: clique
+local function tweenOpenBtnHover(state)
+    local goal = {}
+    if state then
+        goal.BackgroundColor3 = COLOR_BORDER
+        goal.TextColor3 = Color3.new(1,1,1)
+    else
+        goal.BackgroundColor3 = COLOR_BG
+        goal.TextColor3 = COLOR_TEXT
+    end
+    TweenService:Create(openBtn, TweenInfo.new(0.25), {BackgroundColor3 = goal.BackgroundColor3}):Play()
+    TweenService:Create(openText, TweenInfo.new(0.25), {TextColor3 = goal.TextColor3}):Play()
+end
 
-local titleGradient = Instance.new("UIGradient", Title)
-titleGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,128,0)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,0,128)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(0,128,255))
-}
-titleGradient.Rotation = 90
+openBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        tweenOpenBtnHover(true)
+    elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+        togglePanel()
+    end
+end)
+openBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        tweenOpenBtnHover(false)
+    end
+end)
 
--- Left categories
-local leftWidth = isTouch and 180 or 260
-local leftPanel = Instance.new("Frame", Panel)
-leftPanel.Name = "LeftPanel"
-leftPanel.Size = UDim2.new(0, leftWidth, 1, -92)
-leftPanel.Position = UDim2.new(0, 16, 0, 72)
-leftPanel.BackgroundTransparency = 1
-leftPanel.ZIndex = Panel.ZIndex + 1
+-- Draggable openBtn
+local dragging, dragInput, dragStart, startPos
+openBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = openBtn.Position
 
-local leftBg = Instance.new("Frame", leftPanel)
-leftBg.Size = UDim2.new(1,0,1,0)
-leftBg.BackgroundColor3 = Color3.fromRGB(6,10,14)
-leftBg.BorderSizePixel = 0
-leftBg.ZIndex = leftPanel.ZIndex
-local leftCorner = Instance.new("UICorner", leftBg)
-leftCorner.CornerRadius = UDim.new(0,12)
-local leftStroke = Instance.new("UIStroke", leftBg)
-leftStroke.Color = Color3.fromRGB(20,28,36)
-leftStroke.Thickness = 1
-leftStroke.Transparency = 0.6
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+openBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        openBtn.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
 
-local leftList = Instance.new("Frame", leftBg)
-leftList.Size = UDim2.new(1,-16,1,-16)
-leftList.Position = UDim2.new(0,8,0,8)
-leftList.BackgroundTransparency = 1
-leftList.ZIndex = leftBg.ZIndex
+-- #########################
+-- PAINEL PRINCIPAL
+-- #########################
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0, 530, 0, 370)
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+panel.Position = UDim2.new(0.5, 0, -1, 0)
+panel.BackgroundColor3 = COLOR_BG
+panel.Parent = gui
+createUICorner(panel, 14)
+createUIStroke(panel, COLOR_BORDER, 2)
 
-local listLayout = Instance.new("UIListLayout", leftList)
-listLayout.Padding = UDim.new(0,8)
-listLayout.FillDirection = Enum.FillDirection.Vertical
-listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+-- Draggable painel
+local draggingPanel, dragInputPanel, dragStartPanel, startPosPanel
+panel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingPanel = true
+        dragStartPanel = input.Position
+        startPosPanel = panel.Position
 
--- Right content
-local contentArea = Instance.new("Frame", Panel)
-contentArea.Name = "ContentArea"
-contentArea.Size = UDim2.new(1,-leftWidth-56,1,-92)
-contentArea.Position = UDim2.new(0,leftWidth+32,0,72)
-contentArea.BackgroundTransparency = 1
-contentArea.ZIndex = Panel.ZIndex + 1
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingPanel = false
+            end
+        end)
+    end
+end)
+panel.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInputPanel = input
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if input == dragInputPanel and draggingPanel then
+        local delta = input.Position - dragStartPanel
+        panel.Position = UDim2.new(
+            startPosPanel.X.Scale,
+            startPosPanel.X.Offset + delta.X,
+            startPosPanel.Y.Scale,
+            startPosPanel.Y.Offset + delta.Y
+        )
+    end
+end)
 
-local contentCard = Instance.new("Frame", contentArea)
-contentCard.Size = UDim2.new(1,0,1,0)
-contentCard.BackgroundColor3 = Color3.fromRGB(6,10,14)
-contentCard.BorderSizePixel = 0
-contentCard.ZIndex = contentArea.ZIndex
-local contentCorner = Instance.new("UICorner", contentCard)
-contentCorner.CornerRadius = UDim.new(0,12)
-local contentStroke = Instance.new("UIStroke", contentCard)
-contentStroke.Color = Color3.fromRGB(14,24,30)
-contentStroke.Thickness = 1
+-- Cabeçalho
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -70, 0, 40)
+title.Position = UDim2.new(0, 20, 0, 10)
+title.BackgroundTransparency = 1
+title.Text = "ZK HUB"
+title.TextColor3 = COLOR_TEXT
+title.Font = Enum.Font.GothamSemibold
+title.TextSize = 24
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = panel
 
--- Content header
-local contentHeader = Instance.new("Frame", contentCard)
-contentHeader.Size = UDim2.new(1,-24,0,44)
-contentHeader.Position = UDim2.new(0,12,0,12)
-contentHeader.BackgroundTransparency = 1
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 38, 0, 38)
+closeBtn.Position = UDim2.new(1, -52, 0, 10)
+closeBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(240, 50, 50)
+closeBtn.TextSize = 28
+closeBtn.Font = Enum.Font.GothamBlack
+closeBtn.Parent = panel
+createUICorner(closeBtn, 12)
+createUIStroke(closeBtn, Color3.fromRGB(240,50,50), 1.5)
 
-local contentTitle = Instance.new("TextLabel", contentHeader)
-contentTitle.Size = UDim2.new(1,0,1,0)
-contentTitle.BackgroundTransparency = 1
-contentTitle.Text = "Categoria 1"
-contentTitle.Font = Enum.Font.GothamSemibold
-contentTitle.TextSize = isTouch and 18 or 20
-contentTitle.TextColor3 = THEME
-contentTitle.TextXAlignment = Enum.TextXAlignment.Left
-contentTitle.ZIndex = contentCard.ZIndex + 1
+closeBtn.MouseButton1Click:Connect(function()
+    togglePanel()
+end)
 
-local contentBody = Instance.new("TextLabel", contentCard)
-contentBody.Size = UDim2.new(1,-24,1,-72)
-contentBody.Position = UDim2.new(0,12,0,68)
-contentBody.BackgroundTransparency = 1
-contentBody.Text = "(Aqui ficarão as opções da categoria.)"
-contentBody.Font = Enum.Font.Gotham
-contentBody.TextSize = 16
-contentBody.TextColor3 = TEXT_COLOR
-contentBody.TextXAlignment = Enum.TextXAlignment.Left
-contentBody.TextYAlignment = Enum.TextYAlignment.Top
-contentBody.TextWrapped = true
-contentBody.ZIndex = contentCard.ZIndex + 1
+-- MENU LATERAL
+local menu = Instance.new("Frame")
+menu.Size = UDim2.new(0, 130, 1, -60)
+menu.Position = UDim2.new(0, 15, 0, 60)
+menu.BackgroundColor3 = Color3.fromRGB(5,14,26)
+menu.Parent = panel
+createUICorner(menu, 10)
 
--- Categories
+local menuLayout = Instance.new("UIListLayout")
+menuLayout.Parent = menu
+menuLayout.Padding = UDim.new(0, 10)
+menuLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- CATEGORIAS (botões laterais)
 local categories = {}
-for i=1,7 do categories[i] = "Categoria "..i end
-local categoryButtons = {}
-local selectedCategory = categories[1]
+local currentCategory = nil
 
-local function clearCategoryStyles()
-	for _, b in ipairs(categoryButtons) do
-		b.BackgroundTransparency = 1
-		b.TextColor3 = Color3.fromRGB(180,200,210)
-	end
+local function createCategory(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -10, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    btn.BackgroundTransparency = 0.7
+    btn.Text = name
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 18
+    btn.TextColor3 = COLOR_TEXT
+    btn.Parent = menu
+    createUICorner(btn, 8)
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundTransparency = 0.4}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundTransparency = 0.7}):Play()
+    end)
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.Visible = false
+    frame.Parent = panel
+
+    btn.MouseButton1Click:Connect(function()
+        if currentCategory then
+            currentCategory.Visible = false
+        end
+        frame.Visible = true
+        currentCategory = frame
+    end)
+
+    categories[name] = frame
+    return frame
 end
 
-for i,name in ipairs(categories) do
-	local btn = Instance.new("TextButton")
-	btn.Name = "Cat_"..i
-	btn.Size = UDim2.new(1,-12,0,isTouch and 44 or 48)
-	btn.Position = UDim2.new(0,8,0,0)
-	btn.BackgroundTransparency = 1
-	btn.Text = name
-	btn.Font = Enum.Font.GothamSemibold
-	btn.TextSize = isTouch and 16 or 18
-	btn.TextColor3 = Color3.fromRGB(180,200,210)
-	btn.AutoButtonColor = true
-	btn.TextXAlignment = Enum.TextXAlignment.Left
-	btn.LayoutOrder = i
-	btn.Parent = leftList
-	btn.ZIndex = leftList.ZIndex
-	local btnCorner = Instance.new("UICorner", btn)
-	btnCorner.CornerRadius = UDim.new(0,8)
+-- Criar categorias do menu
+local catMain = createCategory("Main")
+createCategory("Stealer")
+createCategory("Helper")
+createCategory("Player")
+createCategory("Finder")
+createCategory("Server")
+createCategory("Discord")
 
-	btn.MouseButton1Click:Connect(function()
-		clearCategoryStyles()
-		btn.BackgroundTransparency = 0
-		btn.BackgroundColor3 = THEME
-		btn.TextColor3 = Color3.fromRGB(8,12,14)
-		selectedCategory = name
-		contentTitle.Text = name
-		contentBody.Text = "Categoria selecionada: "..name.."\n\n(Aqui vão as opções — ESP apenas Categoria 1.)"
-		espControls.Visible = (name == "Categoria 1")
-	end)
-	table.insert(categoryButtons,btn)
+-- ÁREA DE CONTEÚDO
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -150, 1, -60)
+contentFrame.Position = UDim2.new(0, 150, 0, 60)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = panel
+
+-- FUNÇÃO BOTÃO TOGGLE MODERNO
+local function createToggle(parent, labelText, initialState, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -20, 0, 40)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 18
+    label.TextColor3 = COLOR_TEXT
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
+
+    local toggleBtn = Instance.new("Frame")
+    toggleBtn.Size = UDim2.new(0, 50, 0, 24)
+    toggleBtn.Position = UDim2.new(0.75, 0, 0.2, 0)
+    toggleBtn.BackgroundColor3 = COLOR_TOGGLE_BG
+    toggleBtn.Parent = container
+    createUICorner(toggleBtn, 12)
+
+    local circle = Instance.new("Frame")
+    circle.Size = UDim2.new(0, 20, 0, 20)
+    circle.Position = UDim2.new(0, 2, 0, 2)
+    circle.BackgroundColor3 = Color3.fromRGB(230,230,230)
+    circle.Parent = toggleBtn
+    createUICorner(circle, 10)
+
+    local toggled = initialState
+
+    local function updateToggle()
+        if toggled then
+            TweenService:Create(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = COLOR_TOGGLE_ON}):Play()
+            TweenService:Create(circle, TweenInfo.new(0.3), {Position = UDim2.new(1, -22, 0, 2)}):Play()
+        else
+            TweenService:Create(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = COLOR_TOGGLE_BG}):Play()
+            TweenService:Create(circle, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        end
+    end
+
+    toggleBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            toggled = not toggled
+            updateToggle()
+            callback(toggled)
+        end
+    end)
+
+    updateToggle()
+    return container
 end
 
-if categoryButtons[1] then
-	categoryButtons[1].BackgroundTransparency = 0
-	categoryButtons[1].BackgroundColor3 = THEME
-	categoryButtons[1].TextColor3 = Color3.fromRGB(8,12,14)
-end
-
--- ---------- ESP ----------
+-- ESP PLAYER (com estilo)
 local espEnabled = false
-local highlights = {}
 
-local function createHighlightForPlayer(pl)
-	if not pl or pl == player then return end
-	if highlights[pl] then pcall(function() highlights[pl]:Destroy() end) end
-	local char = pl.Character
-	if not char or not char.Parent then return end
-	local ok,h = pcall(function()
-		local highlight = Instance.new("Highlight")
-		highlight.Name = "ZK_ESP"
-		highlight.Parent = char
-		highlight.FillColor = THEME
-		highlight.FillTransparency = 0.1
-		highlight.OutlineColor = Color3.fromRGB(255,255,255)
-		highlight.OutlineTransparency = 0
-		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		return highlight
-	end)
-	if ok and h then highlights[pl] = h end
+local function applyESP(character)
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Material = Enum.Material.ForceField
+            part.Color = COLOR_TOGGLE_ON
+            part.Transparency = 0.6
+        end
+    end
 end
 
-local function removeHighlightForPlayer(pl)
-	if highlights[pl] then pcall(function() highlights[pl]:Destroy() end) highlights[pl] = nil end
+local function removeESP(character)
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Material = Enum.Material.Plastic
+            part.Transparency = 0
+        end
+    end
 end
 
-local function enableESP()
-	if espEnabled then return end
-	espEnabled = true
-	for _,pl in ipairs(Players:GetPlayers()) do
-		if pl ~= player then
-			if pl.Character and pl.Character.Parent then createHighlightForPlayer(pl) end
-			pl.CharacterAdded:Connect(function() task.wait(0.05) if espEnabled then createHighlightForPlayer(pl) end end)
-		end
-	end
-	Players.PlayerAdded:Connect(function(pl)
-		if pl ~= player then
-			pl.CharacterAdded:Connect(function() task.wait(0.05) if espEnabled then createHighlightForPlayer(pl) end end)
-		end
-	end)
-end
-
-local function disableESP()
-	if not espEnabled then return end
-	espEnabled = false
-	for pl,h in pairs(highlights) do pcall(function() h:Destroy() end) end
-	highlights = {}
-end
-
-for _,pl in ipairs(Players:GetPlayers()) do
-	pl.CharacterAdded:Connect(function() task.wait(0.05) if espEnabled and pl ~= player then createHighlightForPlayer(pl) end end)
-end
-Players.PlayerRemoving:Connect(removeHighlightForPlayer)
-
--- ---------- ESP Controls ----------
-local espControls = Instance.new("Frame", contentCard)
-espControls.Name = "ESPControls"
-espControls.Size = UDim2.new(1,-24,0,80)
-espControls.Position = UDim2.new(0,12,0,12)
-espControls.BackgroundTransparency = 1
-espControls.ZIndex = contentCard.ZIndex + 1
-espControls.Visible = true
-
-local espLabel = Instance.new("TextLabel", espControls)
-espLabel.Size = UDim2.new(0.5,0,1,0)
-espLabel.Position = UDim2.new(0,0,0,0)
-espLabel.BackgroundTransparency = 1
-espLabel.Text = "ESP PLAYER"
-espLabel.Font = Enum.Font.GothamBold
-espLabel.TextSize = 18
-espLabel.TextColor3 = TEXT_COLOR
-espLabel.TextXAlignment = Enum.TextXAlignment.Left
-espLabel.ZIndex = espControls.ZIndex + 1
-
-local espToggle = Instance.new("TextButton", espControls)
-espToggle.Size = UDim2.new(0,140,0,42)
-espToggle.Position = UDim2.new(1,-144,0.5,-21)
-espToggle.BackgroundColor3 = Color3.fromRGB(20,28,34)
-espToggle.BorderSizePixel = 0
-espToggle.Font = Enum.Font.GothamBold
-espToggle.TextSize = 16
-espToggle.TextColor3 = Color3.fromRGB(200,220,215)
-espToggle.Text = "OFF"
-espToggle.ZIndex = espControls.ZIndex + 1
-local espCorner = Instance.new("UICorner", espToggle)
-espCorner.CornerRadius = UDim.new(0,10)
-local espStroke = Instance.new("UIStroke", espToggle)
-espStroke.Color = Color3.fromRGB(40,50,60)
-
-espToggle.MouseButton1Click:Connect(function()
-	if not espEnabled then
-		enableESP()
-		espToggle.Text = "ON"
-		espToggle.BackgroundColor3 = THEME
-		espToggle.TextColor3 = Color3.fromRGB(8,12,14)
-	else
-		disableESP()
-		espToggle.Text = "OFF"
-		espToggle.BackgroundColor3 = Color3.fromRGB(20,28,34)
-		espToggle.TextColor3 = Color3.fromRGB(200,220,215)
-	end
+RunService.RenderStepped:Connect(function()
+    if not espEnabled then return end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            applyESP(p.Character)
+        end
+    end
 end)
 
--- ---------- Resize grip ----------
-local resizeGrip = Instance.new("Frame", Panel)
-resizeGrip.Size = UDim2.new(0,28,0,28)
-resizeGrip.Position = UDim2.new(1,-34,1,-34)
-resizeGrip.AnchorPoint = Vector2.new(0,0)
-resizeGrip.BackgroundColor3 = Color3.fromRGB(20,28,34)
-resizeGrip.BorderSizePixel = 0
-resizeGrip.ZIndex = Panel.ZIndex + 2
-local resizeCorner = Instance.new("UICorner", resizeGrip)
-resizeCorner.CornerRadius = UDim.new(0,8)
-local gripIcon = Instance.new("TextLabel", resizeGrip)
-gripIcon.Size = UDim2.new(1,0,1,0)
-gripIcon.BackgroundTransparency = 1
-gripIcon.Text = "◢"
-gripIcon.Font = Enum.Font.GothamSemibold
-gripIcon.TextColor3 = Color3.fromRGB(140,170,165)
-gripIcon.TextScaled = true
-gripIcon.ZIndex = resizeGrip.ZIndex + 1
-
-local resizing = false
-local startPos, startSize
-resizeGrip.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		resizing = true
-		startPos = input.Position
-		startSize = Vector2.new(Panel.Size.X.Offset, Panel.Size.Y.Offset)
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				resizing = false
-			end
-		end)
-	end
-end)
-resizeGrip.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement then
-		RunService.RenderStepped:Connect(function()
-			if resizing then
-				local delta = input.Position - startPos
-				local newX = math.clamp(startSize.X + delta.X, PANEL_MIN_SIZE.X, PANEL_MAX_SIZE.X)
-				local newY = math.clamp(startSize.Y + delta.Y, PANEL_MIN_SIZE.Y, PANEL_MAX_SIZE.Y)
-				Panel.Size = UDim2.new(0,newX,0,newY)
-				PANEL_SHOW_POS = UDim2.new(0.5,-newX/2,0.5,-newY/2)
-			end
-		end)
-	end
+-- Adiciona toggle ESP na categoria Main
+createToggle(categories["Main"], "ESP Player", false, function(state)
+    espEnabled = state
+    if not state then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p.Character then
+                removeESP(p.Character)
+            end
+        end
+    end
 end)
 
--- ---------- Abrir/Fechar ----------
-local panelOpen = false
+-- ANIMAÇÃO ABRIR/FECHAR PAINEL
+local isOpen = false
+local openPos = UDim2.new(0.5, 0, 0.5, 0)
+local closedPos = UDim2.new(0.5, 0, -1.2, 0)
+
 local function togglePanel()
-	panelOpen = not panelOpen
-	if panelOpen then
-		Panel.Visible = true
-		TweenService:Create(Panel, TWEEN, {Position=PANEL_SHOW_POS}):Play()
-	else
-		TweenService:Create(Panel, TWEEN, {Position=PANEL_HIDDEN_POS}):Play()
-	end
+    isOpen = not isOpen
+    TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+        {Position = isOpen and openPos or closedPos}):Play()
 end
 
-Icon.MouseButton1Click:Connect(togglePanel)
-UserInputService.InputBegan:Connect(function(input,gpe)
-	if gpe then return end
-	if input.KeyCode == Enum.KeyCode.LeftControl then
-		togglePanel()
-	end
+-- ABRIR APENAS COM CONTROLS
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+        togglePanel()
+    end
+end)
+
+openBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        togglePanel()
+    end
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    togglePanel()
 end)
