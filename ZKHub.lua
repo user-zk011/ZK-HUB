@@ -1,4 +1,4 @@
--- ZK HUB Melhorado com ESP Player e visual moderno
+-- ZK HUB - Versão futurista com degrade, ESP funcional e UI organizada
 -- Cole no StarterGui ou StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -10,26 +10,26 @@ local player = Players.LocalPlayer
 if not player then return end
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Configurações visuais
+-- Configurações visuais e tamanhos
 local OPEN_BTN_SIZE = UDim2.new(0, 70, 0, 70)
-local OPEN_BTN_POS = UDim2.new(0, 60, 0.4, 0) -- mais para direita
+local OPEN_BTN_POS = UDim2.new(0, 60, 0.4, 0) -- botão mais para direita
 
-local MAIN_SIZE = UDim2.new(0, 480, 0, 340)
-local MAIN_SHOW_POS = UDim2.new(0.5, -240, 0.5, -170)
-local MAIN_HIDDEN_POS = UDim2.new(0.5, -240, -0.9, 0)
+local MAIN_SIZE = UDim2.new(0, 500, 0, 360)
+local MAIN_SHOW_POS = UDim2.new(0.5, -250, 0.5, -180)
+local MAIN_HIDDEN_POS = UDim2.new(0.5, -250, -0.9, 0)
 
 local TWEEN_INFO = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- Cores (estilo da imagem enviada)
-local COLOR_BG = Color3.fromRGB(15, 23, 34)
-local COLOR_HIGHLIGHT = Color3.fromRGB(45, 60, 90)
-local COLOR_TEXT = Color3.fromRGB(170, 210, 230)
-local COLOR_ACTIVE = Color3.fromRGB(30, 150, 240)
+-- Cores base para estilo futurista
+local COLOR_BG = Color3.fromRGB(15, 23, 34) -- fundo escuro
+local COLOR_HIGHLIGHT = Color3.fromRGB(45, 60, 90) -- azul escuro para destaques
+local COLOR_TEXT = Color3.fromRGB(170, 210, 230) -- texto principal
+local COLOR_ACTIVE = Color3.fromRGB(30, 150, 240) -- azul vivo
 local COLOR_TOGGLE_BG = Color3.fromRGB(30, 30, 30)
 local COLOR_TOGGLE_ON = Color3.fromRGB(50, 180, 255)
 local COLOR_TOGGLE_OFF = Color3.fromRGB(60, 60, 60)
 
--- Evitar duplicação
+-- Evitar duplicação do GUI
 local guiName = "ZKHubGui"
 local existing = playerGui:FindFirstChild(guiName)
 if existing then existing:Destroy() end
@@ -40,7 +40,34 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = playerGui
 ScreenGui.IgnoreGuiInset = true
 
--- Botão abrir (arrastável)
+-- Função para criar texto com degrade
+local function createGradientText(parent, text, size, pos, font, textSize, alignment)
+	local label = Instance.new("TextLabel")
+	label.Size = size
+	label.Position = pos
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.Font = font or Enum.Font.GothamBlack
+	label.TextSize = textSize or 28
+	label.TextXAlignment = alignment or Enum.TextXAlignment.Left
+	label.TextColor3 = Color3.new(1,1,1)
+	label.Parent = parent
+
+	-- Degrade via UIGradient na TextLabel não funciona, então criamos um Frame com TextLabel branco e um Frame transparente em cima com gradiente para "mascarar" o texto.
+	-- Aqui simplificamos: aplicamos o UIGradient na TextLabel TextColor3, para simular degrade.
+	local gradient = Instance.new("UIGradient")
+	gradient.Rotation = 90
+	gradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)), -- cyan
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 200, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 220)),
+	}
+	gradient.Parent = label
+
+	return label
+end
+
+-- Botão abrir, arredondado, texto ZK com degrade
 local OpenButton = Instance.new("ImageButton")
 OpenButton.Name = "OpenButton"
 OpenButton.Size = OPEN_BTN_SIZE
@@ -49,7 +76,7 @@ OpenButton.AnchorPoint = Vector2.new(0, 0)
 OpenButton.BackgroundColor3 = COLOR_ACTIVE
 OpenButton.AutoButtonColor = true
 OpenButton.BorderSizePixel = 0
-OpenButton.Image = "" -- sem imagem para poder colorir todo
+OpenButton.Image = "" -- sem imagem
 
 local openCorner = Instance.new("UICorner")
 openCorner.CornerRadius = UDim.new(1, 0)
@@ -60,12 +87,12 @@ openStroke.Color = COLOR_HIGHLIGHT
 openStroke.Thickness = 3
 openStroke.Parent = OpenButton
 
--- Sombra por trás
+-- Sombra atrás do botão
 local openShadow = Instance.new("Frame")
 openShadow.Name = "OpenShadow"
-openShadow.Size = UDim2.new(1, 10, 1, 10)
-openShadow.Position = UDim2.new(0, -5, 0, -5)
-openShadow.BackgroundColor3 = Color3.new(0,0,0)
+openShadow.Size = UDim2.new(1, 12, 1, 12)
+openShadow.Position = UDim2.new(0, -6, 0, -6)
+openShadow.BackgroundColor3 = Color3.new(0, 0, 0)
 openShadow.BackgroundTransparency = 0.8
 openShadow.ZIndex = OpenButton.ZIndex - 1
 openShadow.Parent = OpenButton
@@ -73,15 +100,9 @@ local openShadowCorner = Instance.new("UICorner")
 openShadowCorner.CornerRadius = UDim.new(1, 0)
 openShadowCorner.Parent = openShadow
 
--- Texto "ZK" no botão para estilo (pode mudar pra algo mais personalizado)
-local openText = Instance.new("TextLabel")
-openText.Size = UDim2.new(1, 0, 1, 0)
-openText.BackgroundTransparency = 1
-openText.Text = "ZK"
-openText.Font = Enum.Font.GothamBlack
-openText.TextColor3 = COLOR_TEXT
+-- Texto ZK com degrade no botão
+local openText = createGradientText(OpenButton, "ZK", UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Enum.Font.GothamBlack, 32, Enum.TextXAlignment.Center)
 openText.TextScaled = true
-openText.Parent = OpenButton
 
 OpenButton.Parent = ScreenGui
 
@@ -98,32 +119,22 @@ Main.ZIndex = 2
 Main.Parent = ScreenGui
 
 local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 16)
+mainCorner.CornerRadius = UDim.new(0, 18)
 mainCorner.Parent = Main
 
--- Borda sutil
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = COLOR_HIGHLIGHT
 mainStroke.Thickness = 3
 mainStroke.Parent = Main
 
--- Título do painel
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -24, 0, 44)
-Title.Position = UDim2.new(0, 12, 0, 10)
-Title.BackgroundTransparency = 1
-Title.Text = "ZK HUB - Steal a Brainrot"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 22
-Title.TextColor3 = COLOR_TEXT
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = Main
+-- Texto do topo esquerdo do painel com degrade
+local titleLabel = createGradientText(Main, "ZK HUB - Roube um Brainrot", UDim2.new(1, -24, 0, 44), UDim2.new(0, 12, 0, 12), Enum.Font.GothamBold, 22, Enum.TextXAlignment.Left)
 
 -- Botão fechar (canto superior direito)
 local Close = Instance.new("TextButton")
 Close.Name = "Close"
-Close.Size = UDim2.new(0, 36, 0, 36)
-Close.Position = UDim2.new(1, -48, 0, 12)
+Close.Size = UDim2.new(0, 38, 0, 38)
+Close.Position = UDim2.new(1, -54, 0, 12)
 Close.AnchorPoint = Vector2.new(0, 0)
 Close.BackgroundColor3 = COLOR_ACTIVE
 Close.BorderSizePixel = 0
@@ -144,12 +155,12 @@ closeStroke.Parent = Close
 
 -- Container abas esquerda
 local TabsFrame = Instance.new("Frame")
-TabsFrame.Size = UDim2.new(0, 110, 1, -80)
+TabsFrame.Size = UDim2.new(0, 120, 1, -80)
 TabsFrame.Position = UDim2.new(0, 12, 0, 58)
 TabsFrame.BackgroundTransparency = 1
 TabsFrame.Parent = Main
 
--- Lista de abas (nome e ID)
+-- Lista de abas
 local tabs = {
 	{ Name = "Main" },
 	{ Name = "Stealer" },
@@ -160,12 +171,12 @@ local tabs = {
 
 -- Container conteúdo das abas
 local ContentFrame = Instance.new("Frame")
-ContentFrame.Size = UDim2.new(1, -140, 1, -80)
-ContentFrame.Position = UDim2.new(0, 130, 0, 58)
+ContentFrame.Size = UDim2.new(1, -150, 1, -80)
+ContentFrame.Position = UDim2.new(0, 140, 0, 58)
 ContentFrame.BackgroundTransparency = 1
 ContentFrame.Parent = Main
 
--- Criar abas e conteúdo vazio
+-- Criar abas e conteúdo
 local tabButtons = {}
 local tabContents = {}
 
@@ -187,14 +198,14 @@ end
 for i, tab in ipairs(tabs) do
 	local btn = Instance.new("TextButton")
 	btn.Name = "TabBtn"..tab.Name
-	btn.Size = UDim2.new(1, 0, 0, 36)
-	btn.Position = UDim2.new(0, 0, 0, (i-1)*40)
+	btn.Size = UDim2.new(1, 0, 0, 38)
+	btn.Position = UDim2.new(0, 0, 0, (i-1)*44)
 	btn.BackgroundColor3 = COLOR_BG
 	btn.BorderSizePixel = 0
 	btn.Font = Enum.Font.GothamBold
 	btn.Text = tab.Name
 	btn.TextColor3 = Color3.fromRGB(120, 140, 160)
-	btn.TextSize = 18
+	btn.TextSize = 20
 	btn.Parent = TabsFrame
 
 	tabButtons[i] = btn
@@ -213,15 +224,10 @@ for i, tab in ipairs(tabs) do
 	end)
 end
 
--- Selecionar primeira aba inicial
+-- Selecionar primeira aba ao iniciar
 selectTab(1)
 
--- Fechar painel ao clicar no X
-Close.MouseButton1Click:Connect(function()
-	hidePanel()
-end)
-
--- Funções para mostrar/ocultar painel com animação
+-- Função mostrar e esconder painel animado
 local isVisible = false
 
 local function showPanel()
@@ -245,12 +251,11 @@ local function togglePanel()
 	if isVisible then hidePanel() else showPanel() end
 end
 
--- Abrir/fechar pelo botão
-OpenButton.MouseButton1Click:Connect(function()
-	togglePanel()
-end)
+-- Botão abrir/fechar
+OpenButton.MouseButton1Click:Connect(togglePanel)
+Close.MouseButton1Click:Connect(hidePanel)
 
--- Permitir arrastar o botão
+-- Permitir arrastar botão abrir
 local dragging = false
 local dragInput, dragStart, startPos
 
@@ -259,9 +264,10 @@ local function updateOpenButton(input)
 	local newX = startPos.X.Offset + delta.X
 	local newY = startPos.Y.Offset + delta.Y
 
-	-- Limitar posição dentro da tela (mais simples)
-	newX = math.clamp(newX, 10, workspace.CurrentCamera.ViewportSize.X - OpenButton.AbsoluteSize.X - 10)
-	newY = math.clamp(newY, 10, workspace.CurrentCamera.ViewportSize.Y - OpenButton.AbsoluteSize.Y - 10)
+	-- Limitar dentro da tela
+	local viewport = workspace.CurrentCamera.ViewportSize
+	newX = math.clamp(newX, 10, viewport.X - OpenButton.AbsoluteSize.X - 10)
+	newY = math.clamp(newY, 10, viewport.Y - OpenButton.AbsoluteSize.Y - 10)
 
 	OpenButton.Position = UDim2.new(0, newX, 0, newY)
 end
@@ -271,7 +277,6 @@ OpenButton.InputBegan:Connect(function(input)
 		dragging = true
 		dragStart = input.Position
 		startPos = OpenButton.Position
-
 		input.Changed:Connect(function()
 			if input.UserInputState == Enum.UserInputState.End then
 				dragging = false
@@ -292,7 +297,7 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
--- Atalhos teclado para abrir/fechar (especificar quais)
+-- Atalhos para abrir/fechar painel (somente teclas control, shift e alt)
 local allowedKeys = {
 	Enum.KeyCode.LeftControl,
 	Enum.KeyCode.RightControl,
@@ -314,31 +319,29 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	end
 end)
 
--- === Conteúdo da aba Player (index 4) - ESP Player ===
-local espEnabled = false
-local espFolder = Instance.new("Folder", workspace)
-espFolder.Name = "ZK_ESP_Folder"
+-- === Conteúdo da aba Player (index 4) - ESP Player funcional ===
 
+local espEnabled = false
+local espFolder = Instance.new("Folder")
+espFolder.Name = "ZK_ESP_Folder"
+espFolder.Parent = workspace
+
+-- Cria highlight ESP para o player
 local function createEspForPlayer(targetPlayer)
 	if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-
 	-- Evitar duplicados
 	local existing = espFolder:FindFirstChild(targetPlayer.Name)
 	if existing then existing:Destroy() end
-
 	local char = targetPlayer.Character
 
-	-- Criar Box (contorno) e camada azul translúcida sobre o personagem
-	-- Usaremos Highlights que funciona melhor para contorno
 	local highlight = Instance.new("Highlight")
 	highlight.Name = targetPlayer.Name
 	highlight.Adornee = char
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	highlight.OutlineColor = Color3.new(1, 1, 1) -- branco forte
+	highlight.OutlineColor = Color3.new(1,1,1) -- branco contorno
 	highlight.OutlineTransparency = 0
 	highlight.FillColor = Color3.fromRGB(64, 224, 208) -- azul claro
-	highlight.FillTransparency = 0.9 -- opacidade 90% (presta atenção: 0 é opaco, 1 é invisível)
-
+	highlight.FillTransparency = 0.9 -- opacidade 90%
 	highlight.Parent = espFolder
 
 	return highlight
@@ -365,7 +368,6 @@ local function updateAllEsp()
 	end
 end
 
--- Atualizar ESP sempre que personagem aparecer
 Players.PlayerAdded:Connect(function(plr)
 	plr.CharacterAdded:Connect(function()
 		if espEnabled then
@@ -378,12 +380,11 @@ Players.PlayerRemoving:Connect(function(plr)
 	removeEspForPlayer(plr)
 end)
 
--- Atualização periódica para garantir ESP ativo/desativo
 RunService.Heartbeat:Connect(function()
 	updateAllEsp()
 end)
 
--- Criar toggle personalizado (toggle button estilo imagem)
+-- Função para criar toggle button moderno
 local function createToggle(parent, pos, size, initialState)
 	local toggleFrame = Instance.new("Frame")
 	toggleFrame.Size = size or UDim2.new(0, 50, 0, 24)
@@ -422,11 +423,8 @@ local function createToggle(parent, pos, size, initialState)
 		end
 	end)
 
-	-- Custom event "ToggleChanged"
 	toggleFrame.ToggleChanged = Instance.new("BindableEvent")
-	toggleFrame.ToggleChanged.Event:Connect(function(state)
-		-- Placeholder
-	end)
+	toggleFrame.ToggleChanged.Event:Connect(function(state) end)
 
 	function toggleFrame:Set(state)
 		setState(state)
@@ -445,8 +443,7 @@ local function createToggle(parent, pos, size, initialState)
 	return toggleFrame
 end
 
--- Prepara conteúdo da aba Player para ESP toggle
-
+-- Conteúdo da aba Player: ESP toggle
 local playerContent = tabContents[4]
 
 local espLabel = Instance.new("TextLabel")
@@ -466,16 +463,10 @@ espToggle.Parent = playerContent
 espToggle.ToggleChanged.Event:Connect(function(state)
 	espEnabled = state
 	if not espEnabled then
-		-- Remove todos highlights quando desativar
+		-- Remove todos highlights ao desativar
 		for _, child in pairs(espFolder:GetChildren()) do
 			if child:IsA("Highlight") then
 				child:Destroy()
 			end
 		end
 	end
-end)
-
--- Inicializa o toggle desligado
-espToggle:Set(false)
-
-return
