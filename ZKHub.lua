@@ -327,9 +327,12 @@ local function setCategory(name)
 	selectedCat = name
 	contentTitle.Text = name
 	contentBody.Text = "Categoria selecionada: "..name.."\n\n(Use as opções desta categoria.)"
-	-- show/hide visual controls
-	visualControls.Visible = (name == "VIZUAL")
-	-- button styles
+
+	-- protege para não causar erro caso visualControls ainda não exista
+	if visualControls then
+		visualControls.Visible = (name == "VIZUAL")
+	end
+
 	for _, b in ipairs(catButtons) do
 		if b._name == name then
 			b.BackgroundTransparency = 0
