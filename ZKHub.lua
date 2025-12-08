@@ -328,8 +328,8 @@ local function setCategory(name)
 	contentTitle.Text = name
 	contentBody.Text = "Categoria selecionada: "..name.."\n\n(Use as opções desta categoria.)"
 
-	-- protege para não causar erro caso visualControls ainda não exista
-	if visualControls then
+	-- evita erro se visualControls ainda não existir
+	if visualControls ~= nil then
 		visualControls.Visible = (name == "VIZUAL")
 	end
 
