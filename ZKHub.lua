@@ -1,139 +1,129 @@
 --============================================================
--- ZK HUB - DiamondTech UI Atualizado 2.0
+-- ZK HUB - DiamondTech UI (Painel organizado + ESP Real)
 --============================================================
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
 -- REMOVE ANTIGO
-local old = PlayerGui:FindFirstChild("ZKHUB")
+local old = playerGui:FindFirstChild("ZKHUB")
 if old then old:Destroy() end
 
+-- SCREEN GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZKHUB"
 gui.IgnoreGuiInset = true
-gui.Parent = PlayerGui
+gui.Parent = playerGui
 
-----------------------------------------------------------
--- BOTÃO ABRIR (ZK)
-----------------------------------------------------------
-local openBtn = Instance.new("Frame")
-openBtn.Size = UDim2.new(0, 60, 0, 60)
-openBtn.Position = UDim2.new(0.12,0,0.4,0)
-openBtn.BackgroundColor3 = Color3.fromRGB(10,25,40) -- igual painel
+--============================================================
+-- BOTÃO ABRIR ZK
+--============================================================
+local openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.new(0,60,0,60)
+openBtn.Position = UDim2.new(0.12,0,0.40,0)
+openBtn.BackgroundColor3 = Color3.fromRGB(10,20,40)
+openBtn.Text = "ZK"
+openBtn.TextColor3 = Color3.fromRGB(255,255,255)
+openBtn.TextSize = 28
+openBtn.Font = Enum.Font.GothamBlack
 openBtn.Parent = gui
-local openCorner = Instance.new("UICorner", openBtn)
-openCorner.CornerRadius = UDim.new(1,0)
+local corner = Instance.new("UICorner", openBtn)
+corner.CornerRadius = UDim.new(1,0)
 
-local openStroke = Instance.new("UIStroke")
-openStroke.Color = Color3.fromRGB(0,150,255)
-openStroke.Thickness = 2
-openStroke.Parent = openBtn
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0,170,255)
+stroke.Thickness = 2
+stroke.Parent = openBtn
 
-local openTxt = Instance.new("TextLabel")
-openTxt.Text = "ZK"
-openTxt.Size = UDim2.new(1,0,1,0)
-openTxt.BackgroundTransparency = 1
-openTxt.TextColor3 = Color3.fromRGB(255,255,255)
-openTxt.Font = Enum.Font.GothamBlack
-openTxt.TextScaled = true
-openTxt.Parent = openBtn
-
--- efeito pulsante suave atrás do botão
+-- Efeito "radar" suave
+local radarCircle = {}
 for i=1,3 do
-    local pulse = Instance.new("Frame")
-    pulse.Size = UDim2.new(1,0,1,0)
-    pulse.Position = UDim2.new(0,0,0,0)
-    pulse.BackgroundColor3 = Color3.fromRGB(0,150,255)
-    pulse.BackgroundTransparency = 0.85 - i*0.2
-    pulse.ZIndex = 0
-    pulse.Parent = openBtn
-    local pulseCorner = Instance.new("UICorner", pulse)
-    pulseCorner.CornerRadius = UDim.new(1,0)
-    coroutine.wrap(function()
-        while true do
-            local tween = TweenService:Create(pulse, TweenInfo.new(1.2 + i*0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-                Size = UDim2.new(1.3,0,1.3,0),
-                Position = UDim2.new(-0.15,0,-0.15,0)
-            })
-            tween:Play()
-            tween.Completed:Wait()
-        end
-    end)()
+    local circle = Instance.new("Frame")
+    circle.Size = UDim2.new(1,0,1,0)
+    circle.Position = UDim2.new(0,0,0,0)
+    circle.BackgroundColor3 = Color3.fromRGB(0,170,255)
+    circle.BackgroundTransparency = 0.85 - (i*0.2)
+    circle.BorderSizePixel = 0
+    circle.Parent = openBtn
+    Instance.new("UICorner", circle).CornerRadius = UDim.new(1,0)
+    table.insert(radarCircle,circle)
 end
 
-----------------------------------------------------------
--- PAINEL PRINCIPAL
-----------------------------------------------------------
+--============================================================
+-- PAINEL
+--============================================================
 local panel = Instance.new("Frame")
-panel.Size = UDim2.new(0,480,0,340)
-panel.Position = UDim2.new(0.5,0,-1,0)
+panel.Size = UDim2.new(0,500,0,360)
+panel.Position = UDim2.new(0.5,0,0.5,0)
 panel.AnchorPoint = Vector2.new(0.5,0.5)
-panel.BackgroundColor3 = Color3.fromRGB(10,25,40)
+panel.BackgroundColor3 = Color3.fromRGB(10,20,40)
+panel.ClipsDescendants = true
 panel.Parent = gui
-local panelCorner = Instance.new("UICorner", panel)
-panelCorner.CornerRadius = UDim.new(0,15)
-local panelStroke = Instance.new("UIStroke")
-panelStroke.Color = Color3.fromRGB(0,150,255)
-panelStroke.Thickness = 2
-panelStroke.Parent = panel
+Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
 
-----------------------------------------------------------
+-- Contorno fino
+local ps = Instance.new("UIStroke")
+ps.Color = Color3.fromRGB(0,170,255)
+ps.Thickness = 1
+ps.Parent = panel
+
+--============================================================
 -- CABEÇALHO
-----------------------------------------------------------
+--============================================================
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,-20,0,40)
-title.Position = UDim2.new(0,10,0,10)
+title.Position = UDim2.new(0,20,0,10)
 title.BackgroundTransparency = 1
 title.Text = "ZK HUB"
 title.TextColor3 = Color3.fromRGB(255,255,255)
-title.TextSize = 26
+title.TextSize = 24
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = panel
 
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0,40,0,40)
-closeBtn.Position = UDim2.new(1,-50,0,10)
-closeBtn.BackgroundColor3 = Color3.fromRGB(0,150,255)
+closeBtn.Size = UDim2.new(0,30,0,30)
+closeBtn.Position = UDim2.new(1,-40,0,10)
+closeBtn.BackgroundColor3 = Color3.fromRGB(10,20,40)
 closeBtn.Text = "X"
-closeBtn.Font = Enum.Font.GothamBlack
 closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-closeBtn.TextSize = 24
+closeBtn.Font = Enum.Font.GothamBlack
+closeBtn.TextSize = 20
 closeBtn.Parent = panel
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
+local closeStroke = Instance.new("UIStroke")
+closeStroke.Color = Color3.fromRGB(0,170,255)
+closeStroke.Thickness = 1
+closeStroke.Parent = closeBtn
 
-----------------------------------------------------------
+--============================================================
 -- MENU LATERAL
-----------------------------------------------------------
+--============================================================
 local menu = Instance.new("Frame")
 menu.Size = UDim2.new(0,150,1,-60)
 menu.Position = UDim2.new(0,10,0,60)
-menu.BackgroundColor3 = Color3.fromRGB(10,25,40)
+menu.BackgroundColor3 = Color3.fromRGB(14,26,40)
 menu.Parent = panel
-Instance.new("UICorner", menu).CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", menu).CornerRadius = UDim.new(0,10)
 
 local list = Instance.new("UIListLayout")
 list.Parent = menu
-list.Padding = UDim.new(0,10)
+list.Padding = UDim.new(0,8)
+list.SortOrder = Enum.SortOrder.LayoutOrder
 
-----------------------------------------------------------
--- ÁREA DE CONTEÚDO
-----------------------------------------------------------
+--============================================================
+-- CONTEÚDO
+--============================================================
 local content = Instance.new("Frame")
 content.Size = UDim2.new(1,-180,1,-60)
 content.Position = UDim2.new(0,170,0,60)
-content.BackgroundColor3 = Color3.fromRGB(10,25,40)
+content.BackgroundColor3 = Color3.fromRGB(10,20,40)
 content.Parent = panel
-local contentCorner = Instance.new("UICorner", content)
-contentCorner.CornerRadius = UDim.new(0,12)
-local contentStroke = Instance.new("UIStroke", content)
-contentStroke.Color = Color3.fromRGB(0,150,255)
-contentStroke.Thickness = 2
+Instance.new("UICorner", content).CornerRadius = UDim.new(0,8)
 
 local categories = {}
 local currentCategory = nil
@@ -141,7 +131,7 @@ local currentCategory = nil
 function newCategory(name)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1,-10,0,40)
-    btn.BackgroundColor3 = Color3.fromRGB(0,150,255)
+    btn.BackgroundColor3 = Color3.fromRGB(0,170,255)
     btn.BackgroundTransparency = 0.8
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -152,14 +142,9 @@ function newCategory(name)
 
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1,0,1,0)
-    frame.BackgroundColor3 = Color3.fromRGB(10,25,40)
+    frame.BackgroundTransparency = 1
     frame.Visible = false
     frame.Parent = content
-    local frameCorner = Instance.new("UICorner", frame)
-    frameCorner.CornerRadius = UDim.new(0,10)
-    local frameStroke = Instance.new("UIStroke", frame)
-    frameStroke.Color = Color3.fromRGB(0,150,255)
-    frameStroke.Thickness = 2
 
     btn.MouseButton1Click:Connect(function()
         if currentCategory then currentCategory.Visible = false end
@@ -170,130 +155,113 @@ function newCategory(name)
     return frame
 end
 
-----------------------------------------------------------
--- CATEGORIAS EXEMPLO
-----------------------------------------------------------
+-- CATEGORIAS
 local cat1 = newCategory("Principal")
-local catVisual = newCategory("Visual")
-local catJogador = newCategory("Jogador")
+local cat2 = newCategory("Visual")
+local cat3 = newCategory("Jogador")
+local cat4 = newCategory("Mundo")
+local cat5 = newCategory("Extras")
 
--- EXEMPLO DE OPÇÕES COM SEPARADORES
-local function addOption(frame, text)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1,-20,0,30)
-    lbl.Position = UDim2.new(0,10,0,#frame:GetChildren()*35)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255,255,255)
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 16
-    lbl.Parent = frame
-
-    local sep = Instance.new("Frame")
-    sep.Size = UDim2.new(1,-20,0,2)
-    sep.Position = UDim2.new(0,10,0,#frame:GetChildren()*35 + 30)
-    sep.BackgroundColor3 = Color3.fromRGB(0,150,255)
-    sep.Parent = frame
-end
-
-addOption(cat1,"ESP Player")
-addOption(cat1,"Speed Hack")
-addOption(catVisual,"Glow")
-addOption(catVisual,"Trails")
-
-----------------------------------------------------------
--- ESP PLAYER ESTILIZADO
-----------------------------------------------------------
+--============================================================
+-- FUNÇÃO ESP PLAYER
+--============================================================
 local espEnabled = false
-local function createESP(p)
-    if p.Character and not p.Character:FindFirstChild("ZK_ESP") then
-        local box = Instance.new("BoxHandleAdornment")
-        box.Name = "ZK_ESP"
-        box.Adornee = p.Character:FindFirstChild("HumanoidRootPart")
-        box.Size = Vector3.new(4,6,2)
-        box.Transparency = 0.6
-        box.Color = BrickColor.new("Bright blue")
-        box.AlwaysOnTop = true
-        box.ZIndex = 10
-        box.Parent = p.Character:FindFirstChild("HumanoidRootPart")
+local espObjects = {}
+
+function createESP(p)
+    if espObjects[p] then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = p.Character
+    highlight.FillColor = Color3.fromRGB(0,170,255)
+    highlight.FillTransparency = 0.6
+    highlight.OutlineColor = Color3.fromRGB(80,200,255)
+    highlight.OutlineTransparency = 0.4
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = gui
+    espObjects[p] = highlight
+end
+
+function removeESP(p)
+    if espObjects[p] then
+        espObjects[p]:Destroy()
+        espObjects[p] = nil
     end
 end
 
-local function removeESP(p)
-    if p.Character then
-        local esp = p.Character:FindFirstChild("ZK_ESP")
-        if esp then esp:Destroy() end
-    end
-end
-
-RunService.RenderStepped:Connect(function()
-    if espEnabled then
-        for _,p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                createESP(p)
-            end
-        end
-    else
-        for _,p in pairs(Players:GetPlayers()) do
-            removeESP(p)
-        end
-    end
-end)
-
--- BOTÃO SWITCH ESTILO IPHONE
-local espSwitch = Instance.new("Frame")
-espSwitch.Size = UDim2.new(0,60,0,30)
-espSwitch.Position = UDim2.new(0,220,0,20)
-espSwitch.BackgroundColor3 = Color3.fromRGB(255,0,0)
+espSwitch = Instance.new("Frame")
+espSwitch.Size = UDim2.new(0,50,0,25)
+espSwitch.Position = UDim2.new(0,230,0,20)
+espSwitch.BackgroundColor3 = Color3.fromRGB(150,0,0)
 espSwitch.Parent = cat1
-local switchCorner = Instance.new("UICorner", espSwitch)
-switchCorner.CornerRadius = UDim.new(1,0)
+Instance.new("UICorner", espSwitch).CornerRadius = UDim.new(1,0)
+local knob = Instance.new("Frame")
+knob.Size = UDim2.new(0.5,0,1,0)
+knob.Position = UDim2.new(0,0,0,0)
+knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+knob.Parent = espSwitch
+Instance.new("UICorner", knob).CornerRadius = UDim.new(1,0)
 
-local switchBall = Instance.new("Frame")
-switchBall.Size = UDim2.new(0.5,0,1,0)
-switchBall.Position = UDim2.new(0,0,0,0)
-switchBall.BackgroundColor3 = Color3.fromRGB(255,255,255)
-switchBall.Parent = espSwitch
-local ballCorner = Instance.new("UICorner", switchBall)
-ballCorner.CornerRadius = UDim.new(1,0)
+-- TOGGLE ESP
+local function toggleESP()
+    espEnabled = not espEnabled
+    if espEnabled then
+        espSwitch.BackgroundColor3 = Color3.fromRGB(0,255,0)
+        knob:TweenPosition(UDim2.new(0.5,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
+    else
+        espSwitch.BackgroundColor3 = Color3.fromRGB(255,0,0)
+        knob:TweenPosition(UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
+    end
+end
 
 espSwitch.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        espEnabled = not espEnabled
-        if espEnabled then
-            espSwitch.BackgroundColor3 = Color3.fromRGB(0,200,0)
-            switchBall:TweenPosition(UDim2.new(0.5,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-        else
-            espSwitch.BackgroundColor3 = Color3.fromRGB(200,0,0)
-            switchBall:TweenPosition(UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        toggleESP()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character then
+            if espEnabled then
+                createESP(p)
+            else
+                removeESP(p)
+            end
         end
     end
 end)
 
-----------------------------------------------------------
--- ANIMAÇÃO DO PAINEL
-----------------------------------------------------------
-local openPos = UDim2.new(0.5,0,0.5,0)
+--============================================================
+-- ABRIR/FECHAR PAINEL
+--============================================================
+local openPos = panel.Position
 local closePos = UDim2.new(0.5,0,-1,0)
-local info = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+local info = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local isOpen = false
+
 local function toggle()
     isOpen = not isOpen
     TweenService:Create(panel, info, {Position = isOpen and openPos or closePos}):Play()
 end
 
-openBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+openBtn.MouseButton1Click:Connect(toggle)
+closeBtn.MouseButton1Click:Connect(toggle)
+
+-- ABRIR APENAS COM LEFT CONTROL
+UIS.InputBegan:Connect(function(input,gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.LeftControl then
         toggle()
     end
 end)
-closeBtn.MouseButton1Click:Connect(toggle)
 
-----------------------------------------------------------
--- DRAGGABLE BOTÃO E PAINEL
-----------------------------------------------------------
+--============================================================
+-- DRAGGABLE
+--============================================================
 local function makeDraggable(frame)
-    local dragging, dragStart, startPos
+    local dragging = false
+    local dragStart, startPos
+
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
@@ -301,11 +269,13 @@ local function makeDraggable(frame)
             startPos = frame.Position
         end
     end)
+
     frame.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
+
     UIS.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
