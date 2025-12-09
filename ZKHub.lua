@@ -34,20 +34,16 @@ openBtn.Parent = gui
 local corner = Instance.new("UICorner", openBtn)
 corner.CornerRadius = UDim.new(1,0)
 
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(0,170,255)
-stroke.Thickness = 2
-stroke.Parent = openBtn
-
--- Efeito "radar" suave
+-- Efeito radar suave
 local radarCircle = {}
 for i=1,3 do
     local circle = Instance.new("Frame")
     circle.Size = UDim2.new(1,0,1,0)
     circle.Position = UDim2.new(0,0,0,0)
     circle.BackgroundColor3 = Color3.fromRGB(0,170,255)
-    circle.BackgroundTransparency = 0.85 - (i*0.2)
+    circle.BackgroundTransparency = 0.5 + i*0.15 -- 50% até 95%
     circle.BorderSizePixel = 0
+    circle.ZIndex = 0
     circle.Parent = openBtn
     Instance.new("UICorner", circle).CornerRadius = UDim.new(1,0)
     table.insert(radarCircle,circle)
@@ -71,12 +67,16 @@ ps.Color = Color3.fromRGB(0,170,255)
 ps.Thickness = 1
 ps.Parent = panel
 
+-- Bloqueio de clique atrás
+panel.Active = true
+panel.Selectable = true
+
 --============================================================
 -- CABEÇALHO
 --============================================================
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,-20,0,40)
-title.Position = UDim2.new(0,20,0,10)
+title.Position = UDim2.new(0,40,0,10) -- um pouco para a direita
 title.BackgroundTransparency = 1
 title.Text = "ZK HUB"
 title.TextColor3 = Color3.fromRGB(255,255,255)
@@ -163,19 +163,20 @@ local cat4 = newCategory("Mundo")
 local cat5 = newCategory("Extras")
 
 --============================================================
--- FUNÇÃO ESP PLAYER
+-- OPÇÃO ESP PLAYER (com silhueta real)
 --============================================================
 local espEnabled = false
 local espObjects = {}
 
 function createESP(p)
     if espObjects[p] then return end
+    if not p.Character then return end
     local highlight = Instance.new("Highlight")
     highlight.Adornee = p.Character
     highlight.FillColor = Color3.fromRGB(0,170,255)
     highlight.FillTransparency = 0.6
-    highlight.OutlineColor = Color3.fromRGB(80,200,255)
-    highlight.OutlineTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(100,200,255)
+    highlight.OutlineTransparency = 0.5
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.Parent = gui
     espObjects[p] = highlight
@@ -188,36 +189,57 @@ function removeESP(p)
     end
 end
 
-espSwitch = Instance.new("Frame")
-espSwitch.Size = UDim2.new(0,50,0,25)
-espSwitch.Position = UDim2.new(0,230,0,20)
-espSwitch.BackgroundColor3 = Color3.fromRGB(150,0,0)
-espSwitch.Parent = cat1
-Instance.new("UICorner", espSwitch).CornerRadius = UDim.new(1,0)
-local knob = Instance.new("Frame")
-knob.Size = UDim2.new(0.5,0,1,0)
-knob.Position = UDim2.new(0,0,0,0)
-knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-knob.Parent = espSwitch
-Instance.new("UICorner", knob).CornerRadius = UDim.new(1,0)
+-- Cria opção de toggle ESP
+local function createOption(parent,name)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1,0,0,35)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
 
--- TOGGLE ESP
-local function toggleESP()
-    espEnabled = not espEnabled
-    if espEnabled then
-        espSwitch.BackgroundColor3 = Color3.fromRGB(0,255,0)
-        knob:TweenPosition(UDim2.new(0.5,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
-    else
-        espSwitch.BackgroundColor3 = Color3.fromRGB(255,0,0)
-        knob:TweenPosition(UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
-    end
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.6,0,1,0)
+    label.Position = UDim2.new(0,0,0,0)
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
+
+    local toggle = Instance.new("Frame")
+    toggle.Size = UDim2.new(0,50,0,25)
+    toggle.Position = UDim2.new(0.65,0,0.15,0)
+    toggle.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    toggle.Parent = container
+    Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0.5,0,1,0)
+    knob.Position = UDim2.new(0,0,0,0)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.Parent = toggle
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(1,0)
+
+    local enabled = false
+    toggle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            enabled = not enabled
+            if enabled then
+                toggle.BackgroundColor3 = Color3.fromRGB(0,255,0)
+                knob:TweenPosition(UDim2.new(0.5,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.25,true)
+            else
+                toggle.BackgroundColor3 = Color3.fromRGB(255,0,0)
+                knob:TweenPosition(UDim2.new(0,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.25,true)
+            end
+            espEnabled = enabled
+        end
+    end)
+
+    return container
 end
 
-espSwitch.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        toggleESP()
-    end
-end)
+createOption(cat1,"ESP Player")
 
 RunService.RenderStepped:Connect(function()
     for _, p in pairs(Players:GetPlayers()) do
@@ -283,6 +305,8 @@ local function makeDraggable(frame)
                 startPos.X.Scale, startPos.X.Offset + delta.X,
                 startPos.Y.Scale, startPos.Y.Offset + delta.Y
             )
+            -- Atualiza posição persistente
+            openPos = frame.Position
         end
     end)
 end
