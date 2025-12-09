@@ -65,31 +65,22 @@ label.Font = Enum.Font.GothamBlack
 label.TextSize = 30
 label.Parent = mainCircle
 
--- ANIMAÇÃO PULSO
+-- ANIMAÇÃO PULSO SUAVE
 for i,pulse in ipairs(pulseCircles) do
     coroutine.wrap(function()
         while true do
-            pulse:TweenSizeAndPosition(
-                UDim2.new(1.4,0,1.4,0),
-                UDim2.new(-0.2,0,-0.2,0),
-                Enum.EasingDirection.Out,
-                Enum.EasingStyle.Quad,
-                1 + i*0.2,
-                true
-            )
-            wait(1 + i*0.2)
-            pulse:TweenSizeAndPosition(
-                UDim2.new(1,0,1,0),
-                UDim2.new(0,0,0,0),
-                Enum.EasingDirection.Out,
-                Enum.EasingStyle.Quad,
-                1 + i*0.2,
-                true
-            )
-            wait(1 + i*0.2)
+            local targetSize = UDim2.new(1.3,0,1.3,0) -- aumenta levemente
+            local targetPos = UDim2.new(-0.15,0,-0.15,0)
+            local tween = TweenService:Create(pulse, TweenInfo.new(1.2 + i*0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+                Size = targetSize,
+                Position = targetPos,
+            })
+            tween:Play()
+            tween.Completed:Wait()
         end
     end)()
 end
+
 
 --============================================================
 -- PAINEL
