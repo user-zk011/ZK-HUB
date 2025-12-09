@@ -1,5 +1,5 @@
 --============================================================
--- ZK HUB - DiamondTech UI (Painel organizado + ESP Real)
+-- ZK HUB - DiamondTech UI (Atualizado)
 --============================================================
 
 local Players = game:GetService("Players")
@@ -23,12 +23,12 @@ gui.Parent = playerGui
 -- BOTÃO ABRIR ZK
 --============================================================
 local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0,60,0,60)
+openBtn.Size = UDim2.new(0,70,0,70) -- maior que o círculo
 openBtn.Position = UDim2.new(0.12,0,0.40,0)
 openBtn.BackgroundColor3 = Color3.fromRGB(10,20,40)
 openBtn.Text = "ZK"
 openBtn.TextColor3 = Color3.fromRGB(255,255,255)
-openBtn.TextSize = 28
+openBtn.TextSize = 36
 openBtn.Font = Enum.Font.GothamBlack
 openBtn.Parent = gui
 local corner = Instance.new("UICorner", openBtn)
@@ -41,7 +41,7 @@ for i=1,3 do
     circle.Size = UDim2.new(1,0,1,0)
     circle.Position = UDim2.new(0,0,0,0)
     circle.BackgroundColor3 = Color3.fromRGB(0,170,255)
-    circle.BackgroundTransparency = 0.5 + i*0.15 -- 50% até 95%
+    circle.BackgroundTransparency = 0.7 + i*0.1 -- 70% até 100%
     circle.BorderSizePixel = 0
     circle.ZIndex = 0
     circle.Parent = openBtn
@@ -76,11 +76,11 @@ panel.Selectable = true
 --============================================================
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,-20,0,40)
-title.Position = UDim2.new(0,40,0,10) -- um pouco para a direita
+title.Position = UDim2.new(0,60,0,10)
 title.BackgroundTransparency = 1
 title.Text = "ZK HUB"
 title.TextColor3 = Color3.fromRGB(255,255,255)
-title.TextSize = 24
+title.TextSize = 28
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = panel
@@ -106,9 +106,8 @@ closeStroke.Parent = closeBtn
 local menu = Instance.new("Frame")
 menu.Size = UDim2.new(0,150,1,-60)
 menu.Position = UDim2.new(0,10,0,60)
-menu.BackgroundColor3 = Color3.fromRGB(14,26,40)
+menu.BackgroundTransparency = 1 -- removido fundo cinza
 menu.Parent = panel
-Instance.new("UICorner", menu).CornerRadius = UDim.new(0,10)
 
 local list = Instance.new("UIListLayout")
 list.Parent = menu
@@ -124,6 +123,12 @@ content.Position = UDim2.new(0,170,0,60)
 content.BackgroundColor3 = Color3.fromRGB(10,20,40)
 content.Parent = panel
 Instance.new("UICorner", content).CornerRadius = UDim.new(0,8)
+
+-- Contorno da área de opções
+local contentStroke = Instance.new("UIStroke")
+contentStroke.Color = Color3.fromRGB(0,170,255)
+contentStroke.Thickness = 1
+contentStroke.Parent = content
 
 local categories = {}
 local currentCategory = nil
@@ -163,7 +168,7 @@ local cat4 = newCategory("Mundo")
 local cat5 = newCategory("Extras")
 
 --============================================================
--- OPÇÃO ESP PLAYER (com silhueta real)
+-- OPÇÃO ESP PLAYER (silhueta real, chamativa)
 --============================================================
 local espEnabled = false
 local espObjects = {}
@@ -173,10 +178,10 @@ function createESP(p)
     if not p.Character then return end
     local highlight = Instance.new("Highlight")
     highlight.Adornee = p.Character
-    highlight.FillColor = Color3.fromRGB(0,170,255)
-    highlight.FillTransparency = 0.6
-    highlight.OutlineColor = Color3.fromRGB(100,200,255)
-    highlight.OutlineTransparency = 0.5
+    highlight.FillColor = Color3.fromRGB(0,200,255)
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(100,255,255)
+    highlight.OutlineTransparency = 0.2
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.Parent = gui
     espObjects[p] = highlight
@@ -192,7 +197,7 @@ end
 -- Cria opção de toggle ESP
 local function createOption(parent,name)
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1,0,0,35)
+    container.Size = UDim2.new(1,0,0,40)
     container.BackgroundTransparency = 1
     container.Parent = parent
 
@@ -203,7 +208,7 @@ local function createOption(parent,name)
     label.TextColor3 = Color3.fromRGB(255,255,255)
     label.BackgroundTransparency = 1
     label.Font = Enum.Font.GothamBold
-    label.TextSize = 16
+    label.TextSize = 18
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
 
@@ -227,10 +232,10 @@ local function createOption(parent,name)
             enabled = not enabled
             if enabled then
                 toggle.BackgroundColor3 = Color3.fromRGB(0,255,0)
-                knob:TweenPosition(UDim2.new(0.5,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.25,true)
+                knob.Position = UDim2.new(0.5,0,0,0)
             else
                 toggle.BackgroundColor3 = Color3.fromRGB(255,0,0)
-                knob:TweenPosition(UDim2.new(0,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.25,true)
+                knob.Position = UDim2.new(0,0,0,0)
             end
             espEnabled = enabled
         end
@@ -240,6 +245,17 @@ local function createOption(parent,name)
 end
 
 createOption(cat1,"ESP Player")
+
+-- Detecta novos jogadores
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function()
+        if espEnabled then createESP(p) end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    removeESP(p)
+end)
 
 RunService.RenderStepped:Connect(function()
     for _, p in pairs(Players:GetPlayers()) do
@@ -254,16 +270,18 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --============================================================
--- ABRIR/FECHAR PAINEL
+-- ABRIR/FECHAR PAINEL (sem deslize, aparece com crescimento)
 --============================================================
-local openPos = panel.Position
-local closePos = UDim2.new(0.5,0,-1,0)
-local info = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local isOpen = false
-
+panel.Size = UDim2.new(0,0,0,0) -- começa invisível
 local function toggle()
     isOpen = not isOpen
-    TweenService:Create(panel, info, {Position = isOpen and openPos or closePos}):Play()
+    if isOpen then
+        panel.Visible = true
+        panel:TweenSize(UDim2.new(0,500,0,360), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
+    else
+        panel:TweenSize(UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
+    end
 end
 
 openBtn.MouseButton1Click:Connect(toggle)
@@ -278,7 +296,7 @@ UIS.InputBegan:Connect(function(input,gpe)
 end)
 
 --============================================================
--- DRAGGABLE
+-- DRAGGABLE (corrigido problema de clicar sobre botão)
 --============================================================
 local function makeDraggable(frame)
     local dragging = false
@@ -305,8 +323,6 @@ local function makeDraggable(frame)
                 startPos.X.Scale, startPos.X.Offset + delta.X,
                 startPos.Y.Scale, startPos.Y.Offset + delta.Y
             )
-            -- Atualiza posição persistente
-            openPos = frame.Position
         end
     end)
 end
