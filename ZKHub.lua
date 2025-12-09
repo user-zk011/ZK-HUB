@@ -1,5 +1,5 @@
 --============================================================
--- ZK HUB - DiamondTech UI (Atualizado)
+-- ZK HUB - DiamondTech UI (Atualizado 100%)
 --============================================================
 
 local Players = game:GetService("Players")
@@ -23,7 +23,7 @@ gui.Parent = playerGui
 -- BOTÃO ABRIR ZK
 --============================================================
 local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0,70,0,70) -- maior que o círculo
+openBtn.Size = UDim2.new(0,70,0,70)
 openBtn.Position = UDim2.new(0.12,0,0.40,0)
 openBtn.BackgroundColor3 = Color3.fromRGB(10,20,40)
 openBtn.Text = "ZK"
@@ -34,14 +34,20 @@ openBtn.Parent = gui
 local corner = Instance.new("UICorner", openBtn)
 corner.CornerRadius = UDim.new(1,0)
 
--- Efeito radar suave
+-- Contorno do botão
+local openStroke = Instance.new("UIStroke")
+openStroke.Color = Color3.fromRGB(0,170,255)
+openStroke.Thickness = 1
+openStroke.Parent = openBtn
+
+-- Radar suave
 local radarCircle = {}
 for i=1,3 do
     local circle = Instance.new("Frame")
     circle.Size = UDim2.new(1,0,1,0)
     circle.Position = UDim2.new(0,0,0,0)
     circle.BackgroundColor3 = Color3.fromRGB(0,170,255)
-    circle.BackgroundTransparency = 0.7 + i*0.1 -- 70% até 100%
+    circle.BackgroundTransparency = 0.7 + i*0.1
     circle.BorderSizePixel = 0
     circle.ZIndex = 0
     circle.Parent = openBtn
@@ -61,13 +67,12 @@ panel.ClipsDescendants = true
 panel.Parent = gui
 Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
 
--- Contorno fino
+-- Contorno fino do painel
 local ps = Instance.new("UIStroke")
 ps.Color = Color3.fromRGB(0,170,255)
 ps.Thickness = 1
 ps.Parent = panel
 
--- Bloqueio de clique atrás
 panel.Active = true
 panel.Selectable = true
 
@@ -76,7 +81,7 @@ panel.Selectable = true
 --============================================================
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,-20,0,40)
-title.Position = UDim2.new(0,60,0,10)
+title.Position = UDim2.new(0,20,0,10) -- mais para esquerda
 title.BackgroundTransparency = 1
 title.Text = "ZK HUB"
 title.TextColor3 = Color3.fromRGB(255,255,255)
@@ -88,7 +93,7 @@ title.Parent = panel
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0,30,0,30)
 closeBtn.Position = UDim2.new(1,-40,0,10)
-closeBtn.BackgroundColor3 = Color3.fromRGB(10,20,40)
+closeBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
 closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
 closeBtn.Font = Enum.Font.GothamBlack
@@ -106,7 +111,7 @@ closeStroke.Parent = closeBtn
 local menu = Instance.new("Frame")
 menu.Size = UDim2.new(0,150,1,-60)
 menu.Position = UDim2.new(0,10,0,60)
-menu.BackgroundTransparency = 1 -- removido fundo cinza
+menu.BackgroundTransparency = 1
 menu.Parent = panel
 
 local list = Instance.new("UIListLayout")
@@ -124,7 +129,7 @@ content.BackgroundColor3 = Color3.fromRGB(10,20,40)
 content.Parent = panel
 Instance.new("UICorner", content).CornerRadius = UDim.new(0,8)
 
--- Contorno da área de opções
+-- Contorno da área de opções centralizado
 local contentStroke = Instance.new("UIStroke")
 contentStroke.Color = Color3.fromRGB(0,170,255)
 contentStroke.Thickness = 1
@@ -168,7 +173,7 @@ local cat4 = newCategory("Mundo")
 local cat5 = newCategory("Extras")
 
 --============================================================
--- OPÇÃO ESP PLAYER (silhueta real, chamativa)
+-- OPÇÃO ESP PLAYER (silhueta real)
 --============================================================
 local espEnabled = false
 local espObjects = {}
@@ -194,27 +199,31 @@ function removeESP(p)
     end
 end
 
--- Cria opção de toggle ESP
+--============================================================
+-- CRIAR OPÇÃO RETÂNGULO ARREDONDADO
+--============================================================
 local function createOption(parent,name)
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1,0,0,40)
-    container.BackgroundTransparency = 1
+    container.Size = UDim2.new(1,0,0,50)
+    container.BackgroundColor3 = Color3.fromRGB(20,25,35) -- fundo levemente acinzentado
     container.Parent = parent
+    Instance.new("UICorner", container).CornerRadius = UDim.new(0,4)
+    container.Position = UDim2.new(0,0,0,0)
 
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(0.6,0,1,0)
-    label.Position = UDim2.new(0,0,0,0)
+    label.Position = UDim2.new(0,10,0,0)
     label.Text = name
     label.TextColor3 = Color3.fromRGB(255,255,255)
     label.BackgroundTransparency = 1
     label.Font = Enum.Font.GothamBold
-    label.TextSize = 18
+    label.TextSize = 20
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
 
     local toggle = Instance.new("Frame")
     toggle.Size = UDim2.new(0,50,0,25)
-    toggle.Position = UDim2.new(0.65,0,0.15,0)
+    toggle.Position = UDim2.new(0.7,0,0.25,0)
     toggle.BackgroundColor3 = Color3.fromRGB(150,0,0)
     toggle.Parent = container
     Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)
@@ -270,10 +279,10 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --============================================================
--- ABRIR/FECHAR PAINEL (sem deslize, aparece com crescimento)
+-- ABRIR/FECHAR PAINEL (crescendo)
 --============================================================
 local isOpen = false
-panel.Size = UDim2.new(0,0,0,0) -- começa invisível
+panel.Size = UDim2.new(0,0,0,0)
 local function toggle()
     isOpen = not isOpen
     if isOpen then
@@ -287,7 +296,6 @@ end
 openBtn.MouseButton1Click:Connect(toggle)
 closeBtn.MouseButton1Click:Connect(toggle)
 
--- ABRIR APENAS COM LEFT CONTROL
 UIS.InputBegan:Connect(function(input,gpe)
     if gpe then return end
     if input.KeyCode == Enum.KeyCode.LeftControl then
@@ -296,7 +304,7 @@ UIS.InputBegan:Connect(function(input,gpe)
 end)
 
 --============================================================
--- DRAGGABLE (corrigido problema de clicar sobre botão)
+-- DRAGGABLE
 --============================================================
 local function makeDraggable(frame)
     local dragging = false
